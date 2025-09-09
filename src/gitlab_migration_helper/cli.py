@@ -34,7 +34,7 @@ def gitlab_options(
         type=str,
         envvar="ORIGIN_GITLAB",
         show_default=True,
-        default="https://partner.bdr.de/gitlab",
+        default="https://gitlab.com/",
         help="URL of the origin Gitlab instance from where to migrate.",
     )
     @click.option(
@@ -71,7 +71,7 @@ def gitlab_options(
         type=str,
         envvar="DESTINATION_GITLAB",
         show_default=True,
-        default="https://gitlab.partner.bdr.de",
+        default="https://gitlab.com/",
         help="URL of the destination Gitlab instance from where to migrate.",
     )
     @click.option(

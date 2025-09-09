@@ -1,7 +1,22 @@
 # Gitlab Migration Helper
 
-A lightweight CLI tool to help move code repositories and some some surrounding
+A lightweight CLI tool to help move code repositories and surrounding
 Gitlab resources from one Gitlab instance to another.
+
+**Features:**
+
+- CLI driven wizard to migrate repositories of a given group
+- Batch migration of all repositories of a group
+- Repositories from subgroups can be included
+- Pruning of the original project, i.e. branches, releases and pipeline runs
+- Additional Gitlab resources, that are migrated:
+  - CI/CD Variables from within the project (inherited variables are not migrated)
+  - Releases
+
+> [!IMPORTANT]
+> In order to keep the volume of the transfered data within the given Gitlab size
+> the releases, tags and pipeline runs are pruned in the origin repositories. Refer
+> to the "project preservation parameters" for details.
 
 ## How-to: Use this Helper
 
@@ -36,7 +51,7 @@ the group ID, which can be found in the web UI in the kebap menu `more actions`
 on the top right of the group's main page.
 
 `PROTECTED_BRANCHES` or `--pb` also accepts a whitespace separated list of
-branches, e.g. "production develop integration". Mark, that only actually
+branches, e.g. "production main master". Mark, that only actually
 matching names protect the branch, so be sure to have no typos. 'Main' and
 'master' branch are kept regardlessly.
 
@@ -52,6 +67,23 @@ matching names protect the branch, so be sure to have no typos. 'Main' and
       --prompt
 ```
 
+or with explicit environment setup
+```bash
+    uv run gmh \
+      --origin-gitlab "http://url.to.your.gitlab.instance" \
+      --origin-certificate "/path/to/your/cert.pem" \
+      --origin-key "/path/to/your/key.pem" \
+      --origin-token "your-token-value" \
+      --destination-gitlab "http://url.to.your.gitlab.instance" \
+      --destination-certificate "/path/to/your/cert.pem" \
+      --destination-key "/path/to/your/key.pem" \
+      --destination-token "your-token-value"\
+      --origin-group 1042 \
+      --destination-group 17060 \
+      --keep-latest-items 10 \
+      --prompt
+```
+
 ## Preparation
 
 ### Setup
@@ -59,15 +91,15 @@ matching names protect the branch, so be sure to have no typos. 'Main' and
 It is recommended to set the following environment variables up, which can
 alternatively be provided as CLI:
 
-- ORIGIN_TOKEN
-- ORIGIN_KEY
-- ORIGIN_CERTIFICATE
-- ORIGIN_GITLAB
-- DESTINATION_TOKEN
-- DESTINATION_KEY
-- DESTINATION_CERTIFICATE
-- DESTINATION_GITLAB
-- PROTECTED_BRANCHES
+- ORIGIN_TOKEN="your-token-value"
+- ORIGIN_KEY="/path/to/your/key.pem"
+- ORIGIN_CERTIFICATE="/path/to/your/cert.pem"
+- ORIGIN_GITLAB="http://url.to.your.gitlab.instance"
+- DESTINATION_TOKEN="your-token-value"
+- DESTINATION_KEY="/path/to/your/key.pem"
+- DESTINATION_CERTIFICATE="/path/to/your/cert.pem"
+- DESTINATION_GITLAB="http://url.to.your.gitlab.instance"
+- PROTECTED_BRANCHES="production main master"
 
 See to the help message for their explanation:
 

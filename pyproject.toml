@@ -1,0 +1,222 @@
+[project]
+authors = [
+    {"email" = "maximilian.toepfer@bdr.de", "name" = "Maximilian Töpfer"},
+]
+dependencies = [
+    "click-option-group",
+    "click>=8.1.7",
+    "gitpython>=3.1.43",
+    "pydantic>=2.11.3",
+    "python-gitlab>=5.1.0",
+    "python-json-logger>=2.0.7",
+    "pyyaml>=6.0.2",
+    "requests-toolbelt",
+    "requests>=2.32.3",
+    "tabulate",
+]
+description = "A lightweight CLI tool to help move code repositories and some some surrounding Gitlab resources from one Gitlab instance to another."
+dynamic = ["version"]
+name = "gitlab_migration_helper"
+packages = [{from = "src", include = "gitlab_migration_helper"}]
+readme = "README.md"
+requires-python = "==3.11.*"
+
+[project.optional-dependencies]
+dev = [
+    "commitizen>=3.29.1",
+    "mypy>=1.7.1",
+    "poethepoet>=0.24.4",
+    "pre-commit>=3.7.1",
+    "pytest-cov>=4.1.0",
+    "pytest>=7.4.3",
+    "ruff==0.6.7",
+    "toml-sort>=0.23.1",
+]
+docs = [
+    # makedocstrings-python has a hard-coded dependency on black for formatting
+    # function signatures in the docs.  If black isn't available it emits a warning,
+    # so we include it in the docs group to silence it.
+    "black>=23.11.0",
+    "mkdocs-gen-files>=0.5.0",
+    "mkdocs-literate-nav>=0.6.1",
+    "mkdocs-material>=9.4.9",
+    "mkdocs-same-dir>=0.1.2",
+    "mkdocs-section-index>=0.3.8",
+    "mkdocs>=1.5.3",
+    "mkdocstrings-python>=1.7.4",
+    "mkdocstrings>=0.24.0",
+]
+
+[project.scripts]
+gmh = "gitlab_migration_helper.cli:commandline_interface"
+
+[tool.commitizen]
+retry_after_failure = false
+template = "templates/CHANGELOG.md.j2"
+update_changelog_on_bump = true
+use_shortcuts = true
+version_provider = "scm"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gitlab_migration_helper"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.mypy]
+disable_error_code = ["prop-decorator"]
+disallow_any_unimported = false  # Disable if unimported types are allowed to be silently replaced with "Any" type
+disallow_untyped_decorators = true
+disallow_untyped_defs = false  # Also sets disallow_incomplete_defs = true
+ignore_missing_imports = false
+show_error_context = true
+warn_return_any = false
+warn_unreachable = true
+warn_unused_configs = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+# Raise mypy exception if a function has no or incomplete type annotations.
+# Consider enabling if you make heavy use of pytest fixtures to document their types.
+disallow_untyped_defs = false
+module = 'tests.*'
+
+[tool.poe.tasks]
+_install-docs = "uv sync --quiet --extra docs"
+check = ["lint", "format-check", "type-check", "test"]
+format = "uv run ruff format ."
+format-check = "uv run ruff format . --check"
+lint = "uv run ruff check ."
+test = "uv run pytest --cov --cov-report term --cov-report xml:coverage.xml"
+type-check = "uv run mypy src/"
+
+[tool.poe.tasks.dev-setup]
+default_item_type = "cmd"
+sequence = [
+    "uv sync --extra dev",
+    "pre-commit install --install-hooks",
+]
+
+[tool.poe.tasks.docs-build]
+cmd = "mkdocs build"
+deps = ["_install-docs"]
+
+[tool.poe.tasks.docs-serve]
+cmd = "mkdocs serve"
+deps = ["_install-docs"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = ['tests']
+
+[tool.ruff]
+extend-include = ["*.ipynb"]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+# We only want to turn on specific preview rules, not all of them
+explicit-preview-rules = true
+ignore = [
+    "ANN101",  # missing-type-self: Missing type annotation for self in method.
+    "G004",  # f-strings in logs not a performance issue in this case.
+]
+# LOG rules are in preview mode
+preview = true
+select = [
+    # Shadowing of builtin variables, arguments and attributes
+    "A",
+    # Annotations
+    "ANN",
+    # ARG: Unused arguments
+    "ARG",
+    # Bugbear
+    "B",
+    # Unnecessary comprehension expressions
+    "C4",
+    # McCabe complexity metric
+    "C901",
+    # All docstring issues, except for undocumented parts
+    "D1",
+    "D2",
+    "D3",
+    "D4",
+    # pycodestyle errors
+    "E",
+    # Eradicate commented out code, deactivate of your own volition
+    "ERA",
+    # Pyflakes
+    "F",
+    # Flake8 logging format
+    "G",
+    # isort
+    "I",
+    # Logging rules are in preview, enable explicitly (21.11.23)
+    "LOG001",
+    "LOG002",
+    "LOG007",
+    "LOG009",
+    # PEP8 compliant naming conventions for classes, methods, etc.
+    "N",
+    # Pytest style
+    "PT",
+    # Unused noqa directive
+    "RUF100",
+    # bandit vulnerability checks
+    "S",
+    # simplify
+    "SIM",
+    # Debugger breakpoints
+    "T10",
+    # pyupgrade
+    "UP",
+]
+
+[tool.ruff.lint.flake8-bugbear]
+# Allow default arguments like, e.g., `data: List[str] = fastapi.Query(None)`.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
+
+[tool.ruff.lint.pep8-naming]
+classmethod-decorators = [
+    "comparator",
+    # Allow SQLAlchemy's dynamic decorators, like `@field.expression`, to trigger class method treatment.
+    "declared_attr",
+    "expression",
+    # Allow Pydantic's `@validator` decorator to trigger class method treatment.
+    "pydantic.validator",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# allow assert statements in tests
+"tests/*.py" = ["S101"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.tomlsort]
+all = true
+sort_first = [
+    "project",
+    "tool",
+]
+spaces_before_inline_comment = 2
+spaces_indent_inline_array = 4
+trailing_comma_inline_array = true
+
+[tool.tomlsort.overrides]
+# The order of inline arrays and tables in poe tasks is often significant,
+# such as the order in which sub commands are run, so we don't touch them
+# at all.
+"tool.poe.tasks.*".inline_arrays = false
+"tool.poe.tasks.*".inline_tables = false
+
+[tool.uv]
+cache-keys = [{git = {commit = true, tags = true}}]
+dev-dependencies = [
+    "types-requests>=2.32.0.20241016",
+    "types-tabulate>=0.9.0.20241207",
+]
+
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatch-vcs", "hatchling"]

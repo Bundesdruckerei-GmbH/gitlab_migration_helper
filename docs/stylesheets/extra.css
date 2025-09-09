@@ -1,0 +1,14 @@
+[data-md-color-scheme="bdr"] {
+    --md-primary-fg-color:        #030045;
+    --md-primary-fg-color--light: #296EF5;
+    --md-primary-fg-color--dark:  #EEF4FD;
+    --md-primary-bg-color:        #EEF4FD;
+    --md-primary-bg-color--light: #EEF4FD;
+    --md-typeset-color: #000029;
+
+    --md-accent-fg-color:                #0043CE;
+    --md-accent-fg-color--transparent:   #0043CE19;
+    --md-accent-bg-color:                #F6F6F6;
+    --md-accent-bg-color--light:         #F6F6F6B2;
+
+}

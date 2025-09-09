@@ -20,11 +20,13 @@ The CLI command can be invoked with just
 This will bring up the CLI help also highlighting the parameters which can be
 exposed as environment variables.
 
-> [!IMPORTANT] Mind, that the CLI won't execute any permanent action unless one
+> [!IMPORTANT]
+> Mind, that the CLI won't execute any permanent action unless one
 > explicitly runs it with the `--no-dry-run` parameter to prevent accidental
 > damage.
 
-> [!CAUTION] It is also highly recommended to have a close look at the
+> [!CAUTION]
+> It is also highly recommended to have a close look at the
 > `Project preservation parameters` in the help message as they determine the
 > deletion of releases and pipelines in the origin Gitlab **permanently**.
 

@@ -1,9 +1,7 @@
-# gitlab_migration_helper
+# Gitlab Migration Helper
 
 A lightweight CLI tool to help move code repositories and some some surrounding
 Gitlab resources from one Gitlab instance to another.
-
-[[_TOC_]]
 
 ## How-to: Use this Helper
 

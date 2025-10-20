@@ -3,6 +3,7 @@
 import functools
 import logging
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 import click
@@ -76,28 +77,28 @@ def gitlab_options(
     )
     @click.option(
         "--destination-certificate",
-        required=True,
+        required=False,
         type=str,
         envvar="DESTINATION_CERTIFICATE",
         help="SSL certificate for communication with the destination Gitlab instance.",
     )
     @click.option(
         "--destination-key",
-        required=True,
+        required=False,
         type=str,
         envvar="DESTINATION_KEY",
         help="SSL key for communication with the destination Gitlab instance.",
     )
     @click.option(
         "--destination-token",
-        required=True,
+        required=False,
         type=str,
         envvar="DESTINATION_TOKEN",
         help="Gitlab token for interaction with the destination Gitlab instance.",
     )
     @click.option(
         "--destination-group",
-        required=True,
+        required=False,
         type=str,
         envvar="DESTINATION_GROUP",
         help="Group in the destination Gitlab to migrate to." + f,
@@ -187,6 +188,43 @@ def assume_yes_option(
     return options_wrapper
 
 
+def local_export(
+    options: Callable[[...], None],  # type: ignore
+) -> Callable[[...], None]:  # type: ignore
+    """Extend CLI options with an optional save to disk command.
+
+    Args:
+        options: CLI options to extend.
+
+    Returns:
+        The extended options.
+    """
+
+    @click.option(
+        "--export-locally",
+        required=False,
+        is_flag=True,
+        default=False,
+        show_default=True,
+        help="If set, specified projects will be "
+        "stored on local disk in gmh project root",
+    )
+    @click.option(
+        "--export-path",
+        required=False,
+        type=click.Path(exists=False),
+        default=Path(__file__).parent.parent.parent / "export",
+        show_default=True,
+        help="If set, specified projects will be "
+        "stored on local disk under the provided path",
+    )
+    @functools.wraps(options)
+    def options_wrapper(*args, **kwargs):  # noqa: ANN202, ANN002, ANN003
+        return options(*args, **kwargs)
+
+    return options_wrapper
+
+
 def add_default_preservation_policy_option(
     options: Callable[[KwArg(Any)], None],
 ) -> Callable[[...], None]:  # type: ignore
@@ -240,6 +278,7 @@ def add_default_preservation_policy_option(
 @gitlab_options
 @add_project_options
 @assume_yes_option
+@local_export
 @add_default_preservation_policy_option
 def commandline_interface(**params) -> None:  # noqa: ANN003
     """Core function of the CLI, bringing the arguments to the core feature function.
@@ -248,6 +287,7 @@ def commandline_interface(**params) -> None:  # noqa: ANN003
         **params: See the decorating functions.
     """
     setup_logging()
+    export_locally = params["export_locally"]
     origin_gitlab = get_gitlab_instance(
         gitlab_url=params["origin_gitlab"],
         token=params["origin_token"],
@@ -260,17 +300,20 @@ def commandline_interface(**params) -> None:  # noqa: ANN003
         group_id=attempt_coersion_to_int(params["origin_group"]),
     )
 
-    destination_gitlab = get_gitlab_instance(
-        gitlab_url=params["destination_gitlab"],
-        token=params["destination_token"],
-        certificate=params["destination_certificate"],
-        key=params["destination_key"],
-    )
+    if export_locally:
+        destination_group = None
+    else:
+        destination_gitlab = get_gitlab_instance(
+            gitlab_url=params["destination_gitlab"],
+            token=params["destination_token"],
+            certificate=params["destination_certificate"],
+            key=params["destination_key"],
+        )
 
-    destination_group = get_gitlab_group(
-        gl=destination_gitlab,
-        group_id=attempt_coersion_to_int(params["destination_group"]),
-    )
+        destination_group = get_gitlab_group(
+            gl=destination_gitlab,
+            group_id=attempt_coersion_to_int(params["destination_group"]),
+        )
 
     preservation_policy = PreservationPolicy(
         retain_number_of_instances=params["keep_latest_items"],
@@ -288,6 +331,8 @@ def commandline_interface(**params) -> None:  # noqa: ANN003
         preserve_branches=params["preserve_branches"],
         exclude_subgroups=params["exclude_subgroups"],
         dry_run=not params["no_dry_run"],
+        export_locally=export_locally,
+        export_path=params["export_path"],
     )
 
 

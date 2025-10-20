@@ -146,3 +146,30 @@ def copy_variables(
     else:
         for var in project_variables:
             destination_project.variables.create(var._attrs)
+
+
+def export_local(
+    project: Project,
+    export_path: Path,
+) -> None:
+    """Write Gitlab project to path project_root/exports at local disc.
+
+    The “exports” folder will be created if not present.
+
+    The copy of the Gitlab project will be persisted as *.tgz file.
+
+    Args:
+        project: Project from an origin Gitlab instance.
+        export_path: Path, under which the project export is stored.
+    """
+    export_url = export_path / f"{project.path}.tgz"
+    logger.info(
+        "Exporting project '%s' to '%s'",
+        project.name,
+        export_url,
+    )
+    with open(export_url, "wb") as file_descriptor:
+        export_project_to_file(
+            project=project,
+            file_descriptor=file_descriptor,
+        )

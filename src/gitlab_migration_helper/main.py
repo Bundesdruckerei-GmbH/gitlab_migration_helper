@@ -126,6 +126,6 @@ def main(
                 )
                 copy_variables(
                     origin_project=project,
-                    destination_project=destination_project.id,
+                    destination_project=destination_project,
                     dry_run=dry_run,  # note DB: dry_run will always be False here?
                 )

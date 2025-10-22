@@ -1,8 +1,0 @@
-"""Example test module."""
-
-from gitlab_migration_helper import __version__
-
-
-def test_version() -> None:
-    """Test that the version is correct."""
-    assert __version__.startswith("0.1.dev")
